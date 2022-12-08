@@ -33,10 +33,37 @@ def employeeDetail(request, pk):
 
 @api_view(['POST'])
 def employeeCreate(request):
-    serializer = EmployeeSerializer(data=request.data)
-    if serializer.is_valid():
-        serializer.save()
-    return Response(serializer.data)
+    data = request.data
+
+    #using serializer to save city
+    cityData = {
+        "name": data["city"],
+        "state": data["state"],
+        "zipcode": data["zipcode"]
+    }
+    city = City.objects.filter(name=cityData["name"], state=cityData["state"], zipcode=cityData["zipcode"])
+
+    if not city:
+        city_serializer = CitySerializer(data=cityData)
+        if city_serializer.is_valid():
+            city_serializer.save()
+            city_id = City.objects.get(name=cityData["name"], state=cityData["state"], zipcode=cityData["zipcode"]).id
+    else:
+        city_id = city[0].id
+
+    title = data["title"]
+    givenName = data["givenName"]
+    surname = data["surname"]
+    middleInitial = data["middleInitial"]
+    gender=  data["gender"]
+    bday  = data["birthday"]
+    city = City.objects.get(pk=city_id)
+
+    #using object instance to save employee
+    employee = Employee(gender=gender, title=title, givenName=givenName, middleInitial=middleInitial, surname=surname, city=city, birthday=bday)
+    employee.save()
+
+    return Response("data added successfully")
 
 @api_view(['POST'])
 def employeeUpdate(request, pk):
